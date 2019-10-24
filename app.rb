@@ -15,13 +15,13 @@ DOWN = 2
 SCHEDULE = '60s'
 
 class State < Sequel::Model
-  # TODO: has many
 end
 
 class Outage < Sequel::Model
 end
 
 def test_all
+  LOGGER.info('Starting all tests')
   State.all.each do |s|
     url = s[:url]
     LOGGER.info('URL ' + url + ' is being tested')
@@ -51,6 +51,7 @@ def test_all
       end
     end
   end
+  LOGGER.info('Finished all tests')
 end
 
 scheduler = Rufus::Scheduler.new
