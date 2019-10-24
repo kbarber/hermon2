@@ -1,9 +1,11 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'json'
 require 'logger'
 require 'rufus-scheduler'
 require 'sequel'
+require 'sinatra'
 
 LOGGER = Logger.new($stdout)
 
@@ -12,7 +14,7 @@ DB_URL = 'postgres://postgres:postgres@localhost/postgres'
 DB = Sequel.connect(DB_URL, logger: LOGGER)
 UP = 1
 DOWN = 2
-SCHEDULE = '60s'
+SCHEDULE = '10s'
 
 class State < Sequel::Model
 end
@@ -59,5 +61,24 @@ scheduler = Rufus::Scheduler.new
 scheduler.every SCHEDULE do
   test_all
 end
+
 # TODO: remove this when we're running a web server
-scheduler.join
+#scheduler.join
+
+class App < Sinatra::Base
+  get '/' do
+    'Hello world!'
+  end
+
+  post '/dbs' do
+    push = JSON.parse(request.body.read)
+    DB.transaction do
+      state = State.new(push)
+      state.save
+    end
+    content_type :json
+    [ success: true ].to_json
+  end
+end
+
+App.run!
